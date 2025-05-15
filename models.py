@@ -3,6 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class ECGCNN(nn.Module):
+    """
+    A 1D Convolutional Neural Network (CNN) for ECG classification.
+    It consists of two convolutional layers followed by max pooling and two fully connected layers.
+    The sigmoid activation is used for the output layer, assuming a binary classification task.
+    """
     def __init__(self, input_length, output = 2):
         super(ECGCNN, self).__init__()
         
@@ -35,6 +40,11 @@ class ECGCNN(nn.Module):
         return "CNN"
     
 class ECGLSTM(nn.Module):
+    """
+    A Long Short-Term Memory (LSTM) network for ECG classification.
+    It consists of an LSTM layer followed by two fully connected layers and a sigmoid output.
+    It processes the input sequence to capture temporal dependencies.
+    """
     def __init__(self, input_length, output=2):
         super(ECGLSTM, self).__init__()
         self.lstm = nn.LSTM(input_size=1, hidden_size=128, batch_first=True)        
@@ -61,6 +71,11 @@ class ECGLSTM(nn.Module):
         return "LSTM"
     
 class ECGRNN(nn.Module):
+    """
+    A Recurrent Neural Network (RNN) for ECG classification.
+    It uses a simple RNN layer followed by two fully connected layers and a sigmoid output.
+    It processes the input sequence to learn temporal patterns.
+    """
     def __init__(self, input_length, output=2):
         super(ECGRNN, self).__init__()
         self.rnn = nn.RNN(input_size=1, hidden_size=128, batch_first=True)
@@ -84,6 +99,11 @@ class ECGRNN(nn.Module):
         return "RNN"
 
 class ECGGRU(nn.Module):
+    """
+    A Gated Recurrent Unit (GRU) network for ECG classification.
+    It employs a GRU layer followed by two fully connected layers and a sigmoid output.
+    GRUs are designed to capture temporal dependencies in sequential data.
+    """
     def __init__(self, input_length, output=2):
         super(ECGGRU, self).__init__()
         self.gru = nn.GRU(input_size=1, hidden_size=128, batch_first=True)
@@ -107,6 +127,12 @@ class ECGGRU(nn.Module):
         return "GRU"
     
 class ECGHYBRID_LSTM(nn.Module):
+    """
+    A hybrid model combining Convolutional Neural Networks (CNNs) and Long Short-Term Memory 
+    (LSTM) for ECG classification. It uses CNN layers to extract features from the input, 
+    followed by LSTM layers to model temporal dependencies of these features.
+    Finally, it uses fully connected layers and a sigmoid output for classification.
+    """
     def __init__(self, input_length, output=2):
         super(ECGHYBRID_LSTM, self).__init__()
         
@@ -136,7 +162,7 @@ class ECGHYBRID_LSTM(nn.Module):
         
         # Dense layers
         x = F.relu(self.fc1(out))
-        x = self.sigmoid(self.fc2(x)) # logits
+        x = self.sigmoid(self.fc2(x))
         return x
 
     @staticmethod
@@ -145,6 +171,12 @@ class ECGHYBRID_LSTM(nn.Module):
     
 
 class ECGHYBRID_RNN(nn.Module):
+    """
+    A hybrid model combining Convolutional Neural Networks (CNNs) and Recurrent Neural Networks 
+    (RNN) for ECG classification. It uses CNN layers for feature extraction followed by RNN layers 
+    to process the temporal sequence of these features.
+    The model ends with fully connected layers and a sigmoid output for classification.
+    """
     def __init__(self, input_length, output=2):
         super(ECGHYBRID_RNN, self).__init__()
 
@@ -180,6 +212,11 @@ class ECGHYBRID_RNN(nn.Module):
 
 
 class ECGHYBRID_GRU(nn.Module):
+    """
+    A hybrid model combining Convolutional Neural Networks (CNNs) and Gated Recurrent Units (GRU) for ECG classification.
+    CNN layers are used to extract spatial features, which are then processed by GRU layers to capture temporal dynamics.
+    The model concludes with fully connected layers and a sigmoid output for classification.
+    """
     def __init__(self, input_length, output=2):
         super(ECGHYBRID_GRU, self).__init__()
 
@@ -216,6 +253,13 @@ class ECGHYBRID_GRU(nn.Module):
 
 
 class ECGHYBRID_GRU_BN(nn.Module):
+    """
+    A hybrid model with Convolutional Neural Networks (CNNs), Batch Normalization (BN), 
+    and Gated Recurrent Units (GRU) for ECG classification.
+    Batch normalization is added after each convolutional layer to improve training stability and performance.
+    The CNN layers extract features, the GRU layers model temporal dependencies, and the 
+    final fully connected layers with sigmoid output perform classification.
+    """
     def __init__(self, input_length, output=2):
         super(ECGHYBRID_GRU_BN, self).__init__()
 
@@ -253,6 +297,13 @@ class ECGHYBRID_GRU_BN(nn.Module):
     
 
 class ECGHYBRID_LSTM_BN(nn.Module):
+    """
+    A hybrid model with Convolutional Neural Networks (CNNs), Batch Normalization (BN), 
+    and Long Short-Term Memory (LSTM) for ECG classification.
+    Batch normalization is applied after each convolutional layer to stabilize and accelerate training.
+    The CNN layers extract relevant features, the LSTM layers model the temporal evolution of these features, 
+    and the final fully connected layers with sigmoid output perform the classification.
+    """
     def __init__(self, input_length, output=2):
         super(ECGHYBRID_LSTM_BN, self).__init__()
         
@@ -284,7 +335,7 @@ class ECGHYBRID_LSTM_BN(nn.Module):
         
         # Dense layers
         x = F.relu(self.fc1(out))
-        x = self.sigmoid(self.fc2(x)) # logits
+        x = self.sigmoid(self.fc2(x))
         return x
 
     @staticmethod

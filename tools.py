@@ -4,24 +4,24 @@ import numpy as np
 
 def running_average(X, window_size=5):
     """
-    Calcola la media mobile non centrata per ogni riga di un array 2D.
-    Ogni riga viene trasformata in una serie di medie mobili sui valori precedenti.
+    Calculates the moving average for each row of a 2D array.
+    Each row is transformed into a series of moving averages over the preceding values.
 
     Args:
-        X (np.ndarray): Array 2D di forma (n_samples, n_features).
-        window_size (int): Dimensione della finestra per la media mobile.
+        X (np.ndarray): 2D array of shape (n_samples, n_features).
+        window_size (int): Size of the moving average window.
 
     Returns:
-        np.ndarray: Array 2D di forma (n_samples, n_features - window_size + 1)
-                    contenente la media mobile calcolata per ciascuna riga.
+        np.ndarray: 2D array of shape (n_samples, n_features - window_size + 1)
+                    containing the calculated moving average for each row.
     """
     if window_size < 1:
-        raise ValueError("window_size deve essere almeno 1")
+        raise ValueError("window_size must be at least 1")
 
     n_samples, n_features = X.shape
     new_length = n_features - window_size + 1
     if new_length < 1:
-        raise ValueError("window_size troppo grande rispetto al numero di elementi per riga")
+        raise ValueError("window_size is too large compared to the number of elements per row")
 
     result = np.empty((n_samples, new_length))
     for i in range(n_samples):
