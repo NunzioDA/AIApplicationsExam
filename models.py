@@ -30,7 +30,8 @@ class ECGCNN(nn.Module):
         x = self.sigmoid(self.fc2(x))
         return x
     
-    def name(self):
+    @staticmethod
+    def name():
         return "CNN"
     
 class ECGLSTM(nn.Module):
@@ -55,12 +56,59 @@ class ECGLSTM(nn.Module):
         x = self.sigmoid(self.fc2(x))
         return x
     
-    def name(self):
+    @staticmethod
+    def name():
         return "LSTM"
     
-class ECGHYBRID(nn.Module):
+class ECGRNN(nn.Module):
     def __init__(self, input_length, output=2):
-        super(ECGHYBRID, self).__init__()
+        super(ECGRNN, self).__init__()
+        self.rnn = nn.RNN(input_size=1, hidden_size=128, batch_first=True)
+
+        self.fc1 = nn.Linear(input_length * 128, 64)
+        self.fc2 = nn.Linear(64, output)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, x):
+        x = x.permute(0, 2, 1)  # (batch, 1, L) -> (batch, L, 1)
+
+        out, hn = self.rnn(x)
+        out = out.contiguous().view(out.size(0), -1)
+
+        x = F.relu(self.fc1(out))
+        x = self.sigmoid(self.fc2(x))
+        return x
+    
+    @staticmethod
+    def name():
+        return "RNN"
+
+class ECGGRU(nn.Module):
+    def __init__(self, input_length, output=2):
+        super(ECGGRU, self).__init__()
+        self.gru = nn.GRU(input_size=1, hidden_size=128, batch_first=True)
+
+        self.fc1 = nn.Linear(input_length * 128, 64)
+        self.fc2 = nn.Linear(64, output)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, x):
+        x = x.permute(0, 2, 1)  # (batch, 1, L) -> (batch, L, 1)
+
+        out, hn = self.gru(x)
+        out = out.contiguous().view(out.size(0), -1)
+
+        x = F.relu(self.fc1(out))
+        x = self.sigmoid(self.fc2(x))
+        return x
+    
+    @staticmethod
+    def name():
+        return "GRU"
+    
+class ECGHYBRID_LSTM(nn.Module):
+    def __init__(self, input_length, output=2):
+        super(ECGHYBRID_LSTM, self).__init__()
         
         self.input_length = input_length
         self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=5, padding=2)
@@ -91,5 +139,154 @@ class ECGHYBRID(nn.Module):
         x = self.sigmoid(self.fc2(x)) # logits
         return x
 
-    def name(self):
-        return "HYBRID"
+    @staticmethod
+    def name():
+        return "HYBRID_LSTM"
+    
+
+class ECGHYBRID_RNN(nn.Module):
+    def __init__(self, input_length, output=2):
+        super(ECGHYBRID_RNN, self).__init__()
+
+        self.input_length = input_length
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=5, padding=2)
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        
+        self.pool = nn.MaxPool1d(kernel_size=2)
+        self.rnn = nn.RNN(input_size=64, hidden_size=128, batch_first=True)
+
+        self.fc1 = nn.Linear((input_length // 4) * 128, 64)
+        self.fc2 = nn.Linear(64, output)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = self.pool(x)
+        x = F.relu(self.conv2(x))
+        x = self.pool(x)
+        
+        x = x.permute(0, 2, 1)  # (batch, C, L) -> (batch, L, C)
+        
+        out, hn = self.rnn(x)
+        out = out.contiguous().view(out.size(0), -1)
+        
+        x = F.relu(self.fc1(out))
+        x = self.sigmoid(self.fc2(x))
+        return x
+
+    @staticmethod
+    def name():
+        return "HYBRID_RNN"
+
+
+class ECGHYBRID_GRU(nn.Module):
+    def __init__(self, input_length, output=2):
+        super(ECGHYBRID_GRU, self).__init__()
+
+        self.input_length = input_length
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=5, padding=2)
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        
+        self.pool = nn.MaxPool1d(kernel_size=2)
+        self.gru = nn.GRU(input_size=64, hidden_size=128, batch_first=True)
+
+        self.fc1 = nn.Linear((input_length // 4) * 128, 64)
+        self.fc2 = nn.Linear(64, output)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, x):
+        x = F.relu(self.conv1(x))
+        x = self.pool(x)
+        x = F.relu(self.conv2(x))
+        x = self.pool(x)
+
+        x = x.permute(0, 2, 1)  # (batch, C, L) -> (batch, L, C)
+
+        out, hn = self.gru(x)
+        out = out.contiguous().view(out.size(0), -1)
+        
+        x = F.relu(self.fc1(out))
+        x = self.sigmoid(self.fc2(x))
+        return x
+
+    @staticmethod
+    def name():
+        return "HYBRID_GRU"
+
+
+
+class ECGHYBRID_GRU_BN(nn.Module):
+    def __init__(self, input_length, output=2):
+        super(ECGHYBRID_GRU_BN, self).__init__()
+
+        self.input_length = input_length
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=5, padding=2)
+        self.bn1 = nn.BatchNorm1d(32)
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm1d(64)
+        
+        self.pool = nn.MaxPool1d(kernel_size=2)
+        self.gru = nn.GRU(input_size=64, hidden_size=128, batch_first=True)
+
+        self.fc1 = nn.Linear((input_length // 4) * 128, 64)
+        self.fc2 = nn.Linear(64, output)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, x):
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = self.pool(x)
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = self.pool(x)
+
+        x = x.permute(0, 2, 1)  # (batch, C, L) -> (batch, L, C)
+
+        out, hn = self.gru(x)
+        out = out.contiguous().view(out.size(0), -1)
+        
+        x = F.relu(self.fc1(out))
+        x = self.sigmoid(self.fc2(x))
+        return x
+
+    @staticmethod
+    def name():
+        return "HYBRID_GRU_BN"
+    
+
+class ECGHYBRID_LSTM_BN(nn.Module):
+    def __init__(self, input_length, output=2):
+        super(ECGHYBRID_LSTM_BN, self).__init__()
+        
+        self.input_length = input_length
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=5, padding=2)
+        self.bn1 = nn.BatchNorm1d(32)
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=64, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm1d(64)
+        
+        self.pool = nn.MaxPool1d(kernel_size=2)
+        self.lstm = nn.LSTM(input_size=64, hidden_size=128, batch_first=True)
+
+        self.fc1 = nn.Linear((input_length//4)*128, 64)
+        self.fc2 = nn.Linear(64, output)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, x):
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = self.pool(x)
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = self.pool(x)
+
+        # x: (batch, 1, L) → (batch, L, 1)
+        x = x.permute(0, 2, 1)
+        
+        # LSTM
+        out, (hn, cn) = self.lstm(x)
+        out = out.contiguous().view(out.size(0), -1)
+        
+        # Dense layers
+        x = F.relu(self.fc1(out))
+        x = self.sigmoid(self.fc2(x)) # logits
+        return x
+
+    @staticmethod
+    def name():
+        return "HYBRID_LSTM_BN"
